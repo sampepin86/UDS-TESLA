@@ -23,3 +23,13 @@ scratch/esp32_can_bridge/ota_test_build/out/
 .vscode/
 .idea/
 *.swp
+psutil/
+Shaggy/
+websocket/
+uds-0.0.227-py2.7.code-workspace
+scratch/esp32_can_bridge/build/
+scratch/esp32_can_bridge/ota_test_build/
+*.bin
+*.elf
+*.map
+
