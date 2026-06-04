@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.env
+venv/
+.venv/
+
+# Arduino build artifacts
+scratch/esp32_can_bridge/build/
+scratch/esp32_can_bridge/ota_test_build/out/
+*.elf
+*.map
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# IDE
+.vscode/
+.idea/
+*.swp
