@@ -64,7 +64,7 @@ class UDSBridgeClient:
             except:
                 pass
     
-    def call(self, method, params=None, timeout=10):
+    def call(self, method, params=None, timeout=15):
         """Call a JSON-RPC method and wait for response."""
         if not self.connected:
             raise Exception("Not connected to UDS Bridge")
