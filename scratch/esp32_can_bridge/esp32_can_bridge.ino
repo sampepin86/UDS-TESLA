@@ -429,6 +429,11 @@ void handleSerial() {
  * Wi-Fi Manager Setup & Actions
  * ========================================== */
 void setupWiFi() {
+  // Disable power saving to prevent latency/packet loss and keep signal stable
+  WiFi.setSleep(false);
+  // Set Transmit power to maximum (19.5 dBm)
+  WiFi.setTxPower(WIFI_POWER_19_5dBm);
+
   // 1. Setup AP Mode (Always active)
   WiFi.softAP(apSSID.c_str(), NULL);
   Serial.print("Access Point started. SSID: ");
