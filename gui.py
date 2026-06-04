@@ -1463,12 +1463,17 @@ class BackendLauncher:
             start_time = time.time()
             while time.time() - start_time < timeout:
                 if self.process.poll() is not None:
-                    stderr = self.process.stderr.read().decode('utf-8', errors='replace')
-                    stdout = self.process.stdout.read().decode('utf-8', errors='replace')
-                    print("Backend process exited early. stdout:\n{}\nstderr:\n{}".format(stdout, stderr))
+                    log_file.close()
+                    try:
+                        with open(log_path, 'r') as lf:
+                            log_content = lf.read()
+                    except Exception as read_err:
+                        log_content = "Could not read log file: {}".format(read_err)
+                    print("Backend process exited early. Log content:\n{}".format(log_content))
                     return False
                 if self.is_running():
                     print("Backend started successfully")
+                    return True
                     return True
                 time.sleep(0.5)
             

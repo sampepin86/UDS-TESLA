@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on May 31, 2026
 
@@ -6,7 +7,6 @@ Created on May 31, 2026
 @description: esp32_transport implements the CAN transport layer for udsClient SWIG
 interfacing via ESP32 over either Serial (USB) or TCP Sockets (Wi-Fi).
 """
-
 import time
 import socket
 import serial
@@ -71,7 +71,7 @@ class ESP32Transport(AbstractTransport):
             self.read_thread.daemon = True
             self.read_thread.start()
 
-            # Set CAN speed and Open CAN channel (best-effort — no car connected is OK)
+            # Set CAN speed and Open CAN channel (best-effort - no car connected is OK)
             self._write_cmd("S{}\r".format(can_baud))
             time.sleep(0.1)
             self._write_cmd("O\r")
