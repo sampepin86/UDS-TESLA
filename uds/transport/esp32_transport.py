@@ -164,10 +164,26 @@ class ESP32Transport(AbstractTransport):
         
         while (time.time() - start_time) < self.receive_timeout_seconds:
             with self.queue_lock:
-                if response_id in self.read_queues and len(self.read_queues[response_id]) > 0:
-                    data_bytes = self.read_queues[response_id].popleft()
-                    frame = utils.array_to_double(data_bytes)
-                    return 1, frame
+                if response_id in self.read_queues:
+                    while len(self.read_queues[response_id]) > 0:
+                        data_bytes = self.read_queues[response_id].popleft()
+                        
+                        # Validate ISO-TP PCI (Protocol Control Information) byte
+                        # The frame type is defined by the 4 most significant bits of byte 0:
+                        # 0 = Single Frame (SF), 1 = First Frame (FF), 2 = Consecutive Frame (CF), 3 = Flow Control (FC)
+                        pci_type = (data_bytes[0] >> 4) & 0x0F
+                        is_valid = False
+                        if pci_type == 0: # Single Frame
+                            sf_len = data_bytes[0] & 0x0F
+                            if 1 <= sf_len <= 7:
+                                is_valid = True
+                        elif pci_type in (1, 2, 3): # FF, CF, FC
+                            is_valid = True
+                            
+                        if is_valid:
+                            frame = utils.array_to_double(data_bytes)
+                            return 1, frame
+                        # If invalid, it's a periodic status frame. Discard and keep draining the queue.
             time.sleep(0.005) # Poll queue every 5ms
             
         self._logger.warning("ESP32Transport: Timeout waiting for response 0x{:03X}".format(response_id))

@@ -168,15 +168,40 @@ class PCANTransport(AbstractTransport):
         :return success, frame: tuple of (bool, double) the success and data read
         """
         try:
-            read_message = self.queue_thread.read(state.responseID)
-
-            if read_message:
-                success = 1
-                frame = utils.array_to_double(read_message.DATA)
-            else:
+            start_time = time.time()
+            success = 0
+            frame = 0x0000000000000000
+            
+            orig_timeout = self.queue_thread._timeout
+            
+            while (time.time() - start_time) < self.receive_timeout_seconds:
+                # Use a very short timeout on read to quickly poll/drain any queued frames
+                self.queue_thread.set_read_timeout(0.005)
+                read_message = self.queue_thread.read(state.responseID)
+                
+                if read_message:
+                    # Validate ISO-TP PCI (Protocol Control Information) byte
+                    pci_type = (read_message.DATA[0] >> 4) & 0x0F
+                    is_valid = False
+                    if pci_type == 0: # Single Frame
+                        sf_len = read_message.DATA[0] & 0x0F
+                        if 1 <= sf_len <= 7:
+                            is_valid = True
+                    elif pci_type in (1, 2, 3): # FF, CF, FC
+                        is_valid = True
+                        
+                    if is_valid:
+                        success = 1
+                        frame = utils.array_to_double(read_message.DATA)
+                        break
+                    # Invalid ISO-TP: discard periodic status message and check the next one
+                else:
+                    time.sleep(0.005)
+                    
+            self.queue_thread.set_read_timeout(orig_timeout)
+            
+            if not success:
                 self._logger.warning("Transport: Timeout while waiting for UDS response")
-                success = 0
-                frame = 0x0000000000000000
 
         except Exception as e:
             self._logger.warning("Transport: Error in receive_frame")
